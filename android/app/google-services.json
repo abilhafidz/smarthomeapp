@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "56246923444",
+    "project_id": "smarthouseapp-3f851",
+    "storage_bucket": "smarthouseapp-3f851.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:56246923444:android:dc9fb42ce70c6fa87327e1",
+        "android_client_info": {
+          "package_name": "com.example.smarthouse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDE7I7JMHwJIg07Yu0Rj-dYwUPfxA9nhE8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:56246923444:android:0466d20174b28a667327e1",
+        "android_client_info": {
+          "package_name": "com.example.untitled1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDE7I7JMHwJIg07Yu0Rj-dYwUPfxA9nhE8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

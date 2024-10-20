@@ -1,0 +1,55 @@
+name: untitled1
+description: "A new Flutter project."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0" # Specify the SDK version
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # MQTT client for Flutter
+  mqtt_client: ^9.6.2
+
+  # State management
+  provider: ^6.0.5  # State management
+  shared_preferences: ^2.0.0
+  geolocator: ^8.0.0  # Pastikan menggunakan versi terbaru
+  http: ^1.2.2
+  dio: ^5.1.0  # Ensure you have the latest version of Dio
+
+
+  permission_handler: ^10.2.0  # For handling permissions
+
+  # Environment variables management
+  flutter_dotenv: ^5.0.2  # To load .env files
+
+  # Firebase dependencies
+  firebase_core: ^2.14.0  # Core Firebase dependency
+  firebase_auth: ^4.16.0  # Firebase Authentication
+  cloud_firestore: ^4.16.0  # Cloud Firestore for database
+  cupertino_icons: ^1.0.8  # Cupertino Icons for iOS design
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Recommended lints for better coding practices
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Custom fonts
+  fonts:
+    - family: Unica One
+      fonts:
+        - asset: assets/fonts/UnicaOne-Regular.ttf
+
+  # Asset images
+  assets:
+    - assets/images/
+    - .env
