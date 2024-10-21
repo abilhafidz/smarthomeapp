@@ -32,26 +32,41 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _onItemTapped(int index) {
+    Widget page;
+
     switch (index) {
       case 0: // Dashboard
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => DashboardPage()),
-        );
-        break;
+        return; // Tidak perlu melakukan apa-apa jika dashboard sudah dipilih
       case 1: // Weather Page
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => WeatherPage()),
-        );
+        page = WeatherPage();
         break;
       case 2: // User Page
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => UserPage()),
-        );
+        page = UserPage();
         break;
+      default:
+        return; // Tidak perlu melakukan apa-apa jika tidak ada halaman yang valid
     }
+
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => page,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          var begin = 0.0;
+          var end = 1.0;
+          var curve = Curves.easeInOut;
+
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var opacityAnimation = animation.drive(tween);
+
+          return FadeTransition(
+            opacity: opacityAnimation,
+            child: child,
+          );
+        },
+        transitionDuration: Duration(milliseconds: 500),
+      ),
+    );
   }
 
   // Function to control the servo and send command via MQTT

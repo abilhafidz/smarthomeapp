@@ -38,26 +38,9 @@ class SmartHomeApp extends StatelessWidget {
       debugShowCheckedModeBanner: false, // Menghilangkan banner debug
       routes: {
         '/login': (context) => LoginPage(),
-        '/dashboard': (context) => DashboardPage(),
+
       },
     );
   }
 }
 
-class AuthWrapper extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator()); // Tampilkan indikator saat memeriksa status
-        } else if (snapshot.hasData) {
-          return DashboardPage(); // Navigasi ke dashboard jika sudah login
-        } else {
-          return LoginPage(); // Navigasi ke login jika belum login
-        }
-      },
-    );
-  }
-}

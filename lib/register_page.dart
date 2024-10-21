@@ -20,7 +20,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
   // Create an instance of FirebaseAuth and Firestore
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Firestore instance
+  final FirebaseFirestore _firestore =
+      FirebaseFirestore.instance; // Firestore instance
   final _formKey = GlobalKey<FormState>(); // Form validation key
 
   Future<void> _register() async {
@@ -31,7 +32,8 @@ class _RegisterPageState extends State<RegisterPage> {
     _formKey.currentState!.save(); // Simpan nilai form
 
     String email = _emailController.text.trim();
-    String username = _usernameController.text.trim(); // Ambil username dari form
+    String username =
+    _usernameController.text.trim(); // Ambil username dari form
     String password = _passwordController.text.trim();
     String pin = _pinController.text.trim();
 
@@ -43,27 +45,18 @@ class _RegisterPageState extends State<RegisterPage> {
 
     try {
       // Create user with email and password
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+      await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-
       // Simpan username ke Firestore dengan user ID
-      await _firestore.collection('users').doc(userCredential.user!.uid).set({
-        'username': username,
-        'email': email,
-      });
-
+      // await _firestore.collection('users').doc(userCredential.user!.uid).set({
+      //   'username': username,
+      //   'email': email,
+      // });
       // Tampilkan pop-up setelah registrasi sukses
       _showSuccessDialog();
-
-    } on FirebaseAuthException catch (e) {
-      // Handle specific Firebase registration errors
-      if (e.code == 'email-already-in-use') {
-        _showError('Email is already in use. Please use a different email.');
-      } else {
-        _showError(e.message ?? 'Registration failed. Please try again.');
-      }
     } catch (e) {
       // Handle general errors
       _showError('An error occurred. Please try again.');
@@ -79,7 +72,8 @@ class _RegisterPageState extends State<RegisterPage> {
   void _showSuccessDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, // Agar dialog tidak bisa ditutup dengan tap di luar
+      barrierDismissible:
+      false, // Agar dialog tidak bisa ditutup dengan tap di luar
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Berhasil Registrasi'),
@@ -183,18 +177,21 @@ class _RegisterPageState extends State<RegisterPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             _buildTextField('Email', _emailController, (value) {
-                              if (value == null || value.isEmpty || !value.contains('@')) {
+                              if (value == null ||
+                                  value.isEmpty ||
+                                  !value.contains('@')) {
                                 return 'Please enter a valid email.';
                               }
                               return null;
                             }),
                             SizedBox(height: 20),
-                            _buildTextField('Username', _usernameController, (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter a username.';
-                              }
-                              return null;
-                            }),
+                            _buildTextField('Username', _usernameController,
+                                    (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter a username.';
+                                  }
+                                  return null;
+                                }),
                             SizedBox(height: 20),
                             _buildPasswordField(),
                             SizedBox(height: 20),
@@ -226,21 +223,26 @@ class _RegisterPageState extends State<RegisterPage> {
                                     border: Border.all(color: Colors.black54),
                                     borderRadius: BorderRadius.circular(8),
                                     color: _isClicked
-                                        ? Color(0xFF4E3B31) // Color when clicked
+                                        ? Color(
+                                        0xFF4E3B31) // Color when clicked
                                         : _isHovered
                                         ? Color(0xFF4E3B31) // Hover color
-                                        : Color(0xFFFAE7D7), // Default color
+                                        : Color(
+                                        0xFFFAE7D7), // Default color
                                   ),
                                   child: Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 40),
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 12, horizontal: 40),
                                     child: Text(
                                       'SIGN UP',
                                       style: TextStyle(
                                         color: _isClicked
-                                            ? Colors.white // Text color when clicked
+                                            ? Colors
+                                            .white // Text color when clicked
                                             : _isHovered
                                             ? Colors.white
-                                            : Colors.black, // Default text color
+                                            : Colors
+                                            .black, // Default text color
                                       ),
                                     ),
                                   ),
@@ -276,7 +278,8 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildTextField(String hint, TextEditingController controller, String? Function(String?)? validator) {
+  Widget _buildTextField(String hint, TextEditingController controller,
+      String? Function(String?)? validator) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.black54),
@@ -337,3 +340,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 }
+
+
+
