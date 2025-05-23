@@ -1,8 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart'; // Tambahkan import Firestore
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'login_page.dart'; // Pastikan untuk mengimpor halaman login
-import 'dashboard.dart'; // Pastikan untuk mengimpor halaman dashboard
+import 'login_page.dart';
+import 'dashboard.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -12,53 +12,45 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   bool _obscureText = true;
   bool _isHovered = false;
-  bool _isClicked = false; // Status klik
-  final TextEditingController _usernameController = TextEditingController();
+  bool _isClicked = false;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _pinController = TextEditingController();
 
-  // Create an instance of FirebaseAuth and Firestore
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore =
-      FirebaseFirestore.instance; // Firestore instance
-  final _formKey = GlobalKey<FormState>(); // Form validation key
+      FirebaseFirestore.instance;
+  final _formKey = GlobalKey<FormState>();
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) {
-      // Jika form tidak valid, berhenti dan kembalikan
+
       return;
     }
-    _formKey.currentState!.save(); // Simpan nilai form
+    _formKey.currentState!.save();
 
     String email = _emailController.text.trim();
-    String username =
-    _usernameController.text.trim(); // Ambil username dari form
     String password = _passwordController.text.trim();
     String pin = _pinController.text.trim();
 
-    // Check if the PIN matches the required PIN
+
     if (pin != '1234') {
       _showError('PIN is incorrect. Please use the correct PIN.');
       return;
     }
 
     try {
-      // Create user with email and password
+
       UserCredential userCredential =
       await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      // Simpan username ke Firestore dengan user ID
-      // await _firestore.collection('users').doc(userCredential.user!.uid).set({
-      //   'username': username,
-      //   'email': email,
-      // });
-      // Tampilkan pop-up setelah registrasi sukses
+
       _showSuccessDialog();
     } catch (e) {
-      // Handle general errors
+
       _showError('An error occurred. Please try again.');
     }
   }
@@ -73,7 +65,7 @@ class _RegisterPageState extends State<RegisterPage> {
     showDialog(
       context: context,
       barrierDismissible:
-      false, // Agar dialog tidak bisa ditutup dengan tap di luar
+      false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Berhasil Registrasi'),
@@ -82,8 +74,8 @@ class _RegisterPageState extends State<RegisterPage> {
             TextButton(
               child: Text('OK'),
               onPressed: () {
-                Navigator.of(context).pop(); // Menutup dialog
-                _navigateToLogin(); // Navigasi ke halaman login
+                Navigator.of(context).pop();
+                _navigateToLogin();
               },
             ),
           ],
@@ -93,13 +85,12 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _navigateToLogin() {
-    // Reset form fields
-    _usernameController.clear();
+
     _emailController.clear();
     _passwordController.clear();
     _pinController.clear();
 
-    // Navigasi ke halaman login
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => LoginPage()),
@@ -112,7 +103,7 @@ class _RegisterPageState extends State<RegisterPage> {
       backgroundColor: Color(0xFF58403B),
       body: Stack(
         children: [
-          // Hiasan di pojok atas kanan
+
           Positioned(
             top: 0,
             right: 0,
@@ -127,7 +118,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
           ),
-          // Hiasan di pojok bawah kiri
+
           Positioned(
             bottom: 0,
             left: 0,
@@ -142,12 +133,12 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
           ),
-          // Konten utama
+
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Form(
-                key: _formKey, // Tambahkan form key untuk validasi
+                key: _formKey,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -157,9 +148,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     SizedBox(height: 20),
                     Text(
-                      'SMART HOME',
+                      'Smart House',
                       style: TextStyle(
                         color: Colors.white,
+                        fontFamily: 'Unica One',
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                       ),
@@ -185,14 +177,6 @@ class _RegisterPageState extends State<RegisterPage> {
                               return null;
                             }),
                             SizedBox(height: 20),
-                            _buildTextField('Username', _usernameController,
-                                    (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter a username.';
-                                  }
-                                  return null;
-                                }),
-                            SizedBox(height: 20),
                             _buildPasswordField(),
                             SizedBox(height: 20),
                             _buildTextField('PIN', _pinController, (value) {
@@ -205,9 +189,9 @@ class _RegisterPageState extends State<RegisterPage> {
                             GestureDetector(
                               onTap: () {
                                 setState(() {
-                                  _isClicked = true; // Set to true on click
+                                  _isClicked = true;
                                 });
-                                _register(); // Call the registration logic
+                                _register();
                               },
                               child: MouseRegion(
                                 onEnter: (_) {
@@ -223,12 +207,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                     border: Border.all(color: Colors.black54),
                                     borderRadius: BorderRadius.circular(8),
                                     color: _isClicked
-                                        ? Color(
-                                        0xFF4E3B31) // Color when clicked
+                                        ? Color(0xFF4E3B31)
                                         : _isHovered
-                                        ? Color(0xFF4E3B31) // Hover color
-                                        : Color(
-                                        0xFFFAE7D7), // Default color
+                                        ? Color(0xFF4E3B31)
+                                        : Color(0xFFFAE7D7),
                                   ),
                                   child: Padding(
                                     padding: EdgeInsets.symmetric(
@@ -236,13 +218,14 @@ class _RegisterPageState extends State<RegisterPage> {
                                     child: Text(
                                       'SIGN UP',
                                       style: TextStyle(
+                                        fontFamily: "Unica One",
                                         color: _isClicked
                                             ? Colors
-                                            .white // Text color when clicked
+                                            .white
                                             : _isHovered
                                             ? Colors.white
                                             : Colors
-                                            .black, // Default text color
+                                            .black,
                                       ),
                                     ),
                                   ),
@@ -252,7 +235,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             SizedBox(height: 20),
                             GestureDetector(
                               onTap: () {
-                                // Navigasi kembali ke halaman login
+
                                 Navigator.pop(context);
                               },
                               child: Text(
@@ -288,14 +271,14 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
       child: TextFormField(
         controller: controller,
-        style: TextStyle(color: Colors.black),
+        style: TextStyle(color: Colors.black,fontFamily: "Unica One"),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.black54),
+          hintStyle: TextStyle(color: Colors.black54,fontFamily: "Unica One"),
           border: InputBorder.none,
           contentPadding: EdgeInsets.all(12),
         ),
-        validator: validator, // Tambahkan validator
+        validator: validator,
       ),
     );
   }
@@ -310,10 +293,10 @@ class _RegisterPageState extends State<RegisterPage> {
       child: TextFormField(
         controller: _passwordController,
         obscureText: _obscureText,
-        style: TextStyle(color: Colors.black),
+        style: TextStyle(color: Colors.black,fontFamily: "Unica One"),
         decoration: InputDecoration(
           hintText: 'Password',
-          hintStyle: TextStyle(color: Colors.black54),
+          hintStyle: TextStyle(color: Colors.black54,fontFamily: "Unica One"),
           border: InputBorder.none,
           contentPadding: EdgeInsets.all(12),
           suffixIcon: IconButton(
@@ -323,7 +306,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             onPressed: () {
               setState(() {
-                _obscureText = !_obscureText; // Toggle visibility
+                _obscureText = !_obscureText;
               });
             },
           ),
@@ -340,6 +323,3 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 }
-
-
-

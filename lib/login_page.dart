@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'register_page.dart'; // Pastikan ini mengarah ke file Register Anda
-import 'switch_state.dart'; // Pastikan ini mengarah ke file SwitchState Anda
+import 'register_page.dart';
+import 'switch_state.dart';
 import 'mqtt_service.dart';
-import 'dashboard.dart'; // Import the dashboard page
+import 'dashboard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
@@ -12,49 +12,49 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  bool _obscureText = true; // Variabel untuk menyimpan status visibility password
-  bool _isHovered = false; // Variabel untuk menyimpan status hover tombol
-  bool _isPressed = false; // Variabel untuk menyimpan status ketika tombol ditekan
-  final TextEditingController _emailController = TextEditingController(); // Mengubah username menjadi email
+  bool _obscureText = true;
+  bool _isHovered = false;
+  bool _isPressed = false;
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance; // Inisialisasi Firebase Auth
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Cek apakah input email dan password terisi
+
   bool get _isInputFilled => _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
 
   Future<void> _login() async {
     try {
-      // Masukkan email dan password pengguna
+
       await _auth.signInWithEmailAndPassword(
-        email: _emailController.text, // Menggunakan email
+        email: _emailController.text,
         password: _passwordController.text,
       );
 
-      // Mengambil instance dari SwitchState
+
       final switchState = Provider.of<SwitchState>(context, listen: false);
 
-      // Menambahkan logika untuk menghubungkan ke MQTT setelah login berhasil
+
       await switchState.mqttService.connect();
 
-      // Tampilkan snackbar atau dialog sebagai indikasi login berhasil
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login berhasil!')),
+        SnackBar(content: Text('Login berhasil! , Selamat datang!!')),
       );
 
-      // Navigasi manual ke Dashboard setelah login berhasil
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => DashboardPage()),
       );
 
     } on FirebaseAuthException catch (e) {
-      // Menangani kesalahan otentikasi
-      String message = e.message ?? 'Login gagal, silakan coba lagi.';
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        SnackBar(content: Text('Email atau kata sandi yang Anda masukkan salah. Silakan coba lagi')),
       );
+
     } catch (e) {
-      // Kesalahan umum
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Terjadi kesalahan, silakan coba lagi.')),
       );
@@ -64,10 +64,10 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF58403B), // Warna latar belakang sesuai dengan gambar
+      backgroundColor: Color(0xFF58403B),
       body: Stack(
         children: [
-          // Hiasan di pojok atas kanan
+
           Positioned(
             top: 0,
             right: 0,
@@ -75,14 +75,14 @@ class _LoginPageState extends State<LoginPage> {
               width: 187,
               height: 47,
               decoration: BoxDecoration(
-                color: Color(0xFFE5C6B6), // Warna hiasan
+                color: Color(0xFFE5C6B6),
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(50), // Radius untuk pojok bawah kiri
+                  bottomLeft: Radius.circular(50),
                 ),
               ),
             ),
           ),
-          // Hiasan di pojok bawah kiri
+
           Positioned(
             bottom: 0,
             left: 0,
@@ -90,84 +90,85 @@ class _LoginPageState extends State<LoginPage> {
               width: 187,
               height: 47,
               decoration: BoxDecoration(
-                color: Color(0xFFE5C6B6), // Warna hiasan
+                color: Color(0xFFE5C6B6),
                 borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(50), // Radius untuk pojok atas kanan
+                  topRight: Radius.circular(50),
                 ),
               ),
             ),
           ),
-          // Konten utama
+
           Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0), // Padding di sekitar form
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
                     'assets/images/logo_rumah.png',
-                    height: 200, // Memperbesar ukuran logo
+                    height: 200,
                   ),
-                  SizedBox(height: 20), // Jarak antara logo dan teks
+                  SizedBox(height: 20),
                   Text(
-                    'SMART HOME',
+                    'Smart House',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 28, // Memperbesar ukuran teks agar proporsional
+                      fontFamily: 'Unica One',
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 40), // Jarak antara teks dan form
+                  SizedBox(height: 40),
                   Card(
-                    color: Color(0xFFFAE7D7), // Warna latar belakang card
+                    color: Color(0xFFFAE7D7),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.0), // Sudut card
+                      borderRadius: BorderRadius.circular(16.0),
                     ),
-                    elevation: 4, // Bayangan card
+                    elevation: 4,
                     child: Padding(
-                      padding: const EdgeInsets.all(24.0), // Padding di dalam card
+                      padding: const EdgeInsets.all(24.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Input Email
+
                           Container(
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black54), // Garis stroke
+                              border: Border.all(color: Colors.black54),
                               borderRadius: BorderRadius.circular(8),
                               color: Colors.white,
                             ),
                             child: TextField(
-                              controller: _emailController, // Mengubah menjadi email controller
-                              style: TextStyle(color: Colors.black),
+                              controller: _emailController,
+                              style: TextStyle(color: Colors.black,fontFamily: "Unica One"),
                               decoration: InputDecoration(
                                 hintText: 'email',
-                                hintStyle: TextStyle(color: Colors.black54), // Warna hint text
-                                border: InputBorder.none, // Tanpa garis tepi
-                                contentPadding: EdgeInsets.all(12), // Padding di dalam input
+                                hintStyle: TextStyle(color: Colors.black54,fontFamily: 'Unica One'),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.all(12),
                               ),
-                              keyboardType: TextInputType.emailAddress, // Mengatur input menjadi email
+                              keyboardType: TextInputType.emailAddress,
                               onChanged: (value) {
-                                setState(() {}); // Update tampilan saat isi berubah
+                                setState(() {});
                               },
                             ),
                           ),
-                          SizedBox(height: 20), // Jarak antara input email dan password
-                          // Input Password
+                          SizedBox(height: 20),
+
                           Container(
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black54), // Garis stroke
+                              border: Border.all(color: Colors.black54),
                               borderRadius: BorderRadius.circular(8),
                               color: Colors.white,
                             ),
                             child: TextField(
                               controller: _passwordController,
                               obscureText: _obscureText,
-                              style: TextStyle(color: Colors.black),
+                              style: TextStyle(color: Colors.black,fontFamily: "Unica One"),
                               decoration: InputDecoration(
                                 hintText: 'password',
-                                hintStyle: TextStyle(color: Colors.black54), // Warna hint text
-                                border: InputBorder.none, // Tanpa garis tepi
-                                contentPadding: EdgeInsets.all(12), // Padding di dalam input
+                                hintStyle: TextStyle(color: Colors.black54,fontFamily: 'Unica One'),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.all(12),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscureText ? Icons.visibility : Icons.visibility_off,
@@ -175,35 +176,35 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                   onPressed: () {
                                     setState(() {
-                                      _obscureText = !_obscureText; // Toggle visibility
+                                      _obscureText = !_obscureText;
                                     });
                                   },
                                 ),
                               ),
                               onChanged: (value) {
-                                setState(() {}); // Update tampilan saat isi berubah
+                                setState(() {});
                               },
                             ),
                           ),
-                          SizedBox(height: 30), // Jarak antara input password dan tombol sign in
-                          // Tombol Sign In
+                          SizedBox(height: 30),
+
                           GestureDetector(
                             onTapDown: (_) {
                               setState(() {
-                                _isPressed = true; // Tombol ditekan
+                                _isPressed = true;
                               });
                             },
                             onTapUp: (_) {
                               setState(() {
-                                _isPressed = false; // Tombol dilepas
+                                _isPressed = false;
                               });
                               if (_isInputFilled) {
-                                _login(); // Panggil metode login jika input terisi
+                                _login();
                               }
                             },
                             onTapCancel: () {
                               setState(() {
-                                _isPressed = false; // Reset status jika cancel
+                                _isPressed = false;
                               });
                             },
                             child: MouseRegion(
@@ -215,41 +216,42 @@ class _LoginPageState extends State<LoginPage> {
                               onExit: (_) {
                                 setState(() {
                                   _isHovered = false;
-                                  _isPressed = false; // Reset status saat keluar
+                                  _isPressed = false;
                                 });
                               },
                               child: Container(
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.black54), // Garis stroke
+                                  border: Border.all(color: Colors.black54),
                                   borderRadius: BorderRadius.circular(8),
                                   color: _isPressed
-                                      ? Color(0xFF4E3B31) // Warna saat ditekan
+                                      ? Color(0xFF4E3B31)
                                       : _isHovered && _isInputFilled
-                                      ? Color(0xFF4E3B31) // Warna saat hover
-                                      : Color(0xFFFAE7D7), // Warna latar belakang
+                                      ? Color(0xFF4E3B31)
+                                      : Color(0xFFFAE7D7),
                                 ),
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(vertical: 12, horizontal: 40),
                                   child: Text(
                                     'SIGN IN',
                                     style: TextStyle(
+                                      fontFamily:'Unica One',
                                       color: _isPressed || (_isHovered && _isInputFilled)
                                           ? Colors.white
-                                          : Colors.black, // Warna teks tombol
+                                          : Colors.black,
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                          SizedBox(height: 20), // Jarak antara tombol sign in dan teks pendaftaran
-                          // Teks untuk pendaftaran
+                          SizedBox(height: 20),
+
                           GestureDetector(
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => RegisterPage(), // Navigasi ke halaman Register
+                                  builder: (context) => RegisterPage(),
                                 ),
                               );
                             },

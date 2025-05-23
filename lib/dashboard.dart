@@ -1,50 +1,74 @@
 import 'package:flutter/material.dart';
-import 'user_page.dart'; // Import UserPage
-import 'mqtt_service.dart'; // Import MQTT service
+import 'user_page.dart';
+import 'mqtt_service.dart';
 import 'package:provider/provider.dart';
-import 'switch_state.dart'; // Import SwitchState model
-import 'package:mqtt_client/mqtt_client.dart' as mqtt; // Import mqtt_client dengan alias mqtt
-import 'weather.dart'; // Import WeatherPage
+import 'switch_state.dart';
+import 'package:mqtt_client/mqtt_client.dart' as mqtt;
+import 'weather.dart';
 
 class DashboardPage extends StatefulWidget {
   @override
   _DashboardPageState createState() => _DashboardPageState();
+
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  String _ldrStatus = "Lampu Dimatikan"; // Status for LDR
-  String _mqttStatus = "Terputus"; // Status for MQTT connection
-  late MqttService _mqttService; // Declare MQTT service
+  String _ldrStatus = "Lampu Dimatikan";
+  String _h2Status = "Tidak Ada Asap Terdeteksi";
+  String _mqttStatus = "Terputus";
+  late MqttService _mqttService;
 
   @override
   void initState() {
     super.initState();
-    _mqttService = MqttService(); // Initialize MQTT service
-    _mqttService.connect(); // Connect to the MQTT broker
-    _mqttService.subscribe("smarthouse/lamp"); // Subscribe to LDR status
+    _mqttService = MqttService();
+    _mqttService.connect();
 
-    // Update MQTT status based on connection state
+    // Subscribe to the required topics
+    _mqttService.subscribe("smarthouse/lamp");
+    _mqttService.subscribe("smarthouse/mq");
+
+    // Handle connection status updates
     _mqttService.onConnectionChanged = (bool isConnected) {
       setState(() {
         _mqttStatus = isConnected ? "Terhubung" : "Terputus";
       });
     };
+
+    // Handle incoming MQTT messages
+    _mqttService.onMessageReceived = (String topic, String message) {
+      switch (topic) {
+        case "smarthouse/lamp":
+          _updateLDRStatus(message);
+          break;
+        case "smarthouse/mq":
+          _updateH2Status(message);
+          break;
+        default:
+          print("Received message from unknown topic: $topic");
+      }
+    };
   }
+
+
+
+
+
 
   void _onItemTapped(int index) {
     Widget page;
 
     switch (index) {
-      case 0: // Dashboard
-        return; // Tidak perlu melakukan apa-apa jika dashboard sudah dipilih
-      case 1: // Weather Page
+      case 0:
+        return;
+      case 1:
         page = WeatherPage();
         break;
-      case 2: // User Page
+      case 2:
         page = UserPage();
         break;
       default:
-        return; // Tidak perlu melakukan apa-apa jika tidak ada halaman yang valid
+        return;
     }
 
     Navigator.pushReplacement(
@@ -69,51 +93,16 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // Function to control the servo and send command via MQTT
+
+
   void _toggleServo(bool value) {
     if (_mqttService.client.connectionStatus!.state == mqtt.MqttConnectionState.connected) {
       if (value) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            String pin = "";
-            return AlertDialog(
-              title: Text('Masukkan PIN'),
-              content: TextField(
-                obscureText: true,
-                decoration: InputDecoration(hintText: "Masukkan PIN"),
-                onChanged: (value) {
-                  pin = value;
-                },
-              ),
-              actions: <Widget>[
-                TextButton(
-                  child: Text('Batal'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-                TextButton(
-                  child: Text('Kirim'),
-                  onPressed: () {
-                    if (pin == "123") {
-                      _mqttService.publish('smarthouse/servo', 'open');
-                      Provider.of<SwitchState>(context, listen: false).toggleServo(true);
-                      Navigator.of(context).pop();
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('PIN salah!')),
-                      );
-                    }
-                  },
-                ),
-              ],
-            );
-          },
-        );
+        _mqttService.publish('smarthouse/servo', 'open');
+        Provider.of<SwitchState>(context, listen: false).toggleServo(true);
       } else {
-        Provider.of<SwitchState>(context, listen: false).toggleServo(false);
         _mqttService.publish('smarthouse/servo', 'close');
+        Provider.of<SwitchState>(context, listen: false).toggleServo(false);
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -122,62 +111,23 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  // Function to control the buzzer and send command via MQTT
-  void _toggleBuzzer(bool value) {
-    if (_mqttService.client.connectionStatus!.state == mqtt.MqttConnectionState.connected) {
-      if (value) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            String description = "";
-            return AlertDialog(
-              title: Text('Deskripsi Peringatan'),
-              content: TextField(
-                decoration: InputDecoration(hintText: "Masukkan deskripsi peringatan"),
-                onChanged: (value) {
-                  description = value;
-                },
-              ),
-              actions: <Widget>[
-                TextButton(
-                  child: Text('Batal'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-                TextButton(
-                  child: Text('Kirim'),
-                  onPressed: () {
-                    _mqttService.publish('smarthouse/buzzer', 'on: $description');
-                    Provider.of<SwitchState>(context, listen: false).toggleBuzzer(true);
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
-            );
-          },
-        );
-      } else {
-        Provider.of<SwitchState>(context, listen: false).toggleBuzzer(false);
-        _mqttService.publish('smarthouse/buzzer', 'off');
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Koneksi MQTT belum terhubung')),
-      );
-    }
-  }
 
-  // Simulated LDR status update
-  void _updateLDRStatus(String status) {
+
+
+  void _updateLDRStatus(String message) {
     setState(() {
-      _ldrStatus = status;
+      _ldrStatus = (message == "Lampu Menyala") ? "Lampu Menyala" : "Lampu Dimatikan";
     });
   }
 
+  void _updateH2Status(String message) {
+    setState(() {
+      _h2Status= (message == "Asap Terdeteksi") ? "Asap Terdeteksi" : "Tidak Ada Asap Terdeteksi";
+    });
+  }
   @override
   Widget build(BuildContext context) {
-    final switchState = Provider.of<SwitchState>(context); // Get the SwitchState
+    final switchState = Provider.of<SwitchState>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -207,9 +157,10 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ),
             Text(
-              'DASHBOARD',
+              'Dashboard',
               style: TextStyle(
                 color: Color(0xFF66544D),
+                fontFamily: 'Unica One',
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -239,13 +190,13 @@ class _DashboardPageState extends State<DashboardPage> {
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: ListTile(
-                            leading: Icon(Icons.door_sliding, size: 40, color: Colors.green),
+                            leading: Icon(Icons.door_sliding, size: 40, color: Color(0xFF5B4741)),
                             title: Text(
                               'Kontrol Pintu',
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold,  fontFamily: 'Unica One',),
                             ),
                             trailing: Switch(
-                              activeColor: Colors.green,
+                              activeColor: Color(0xFF5B4741),
                               value: switchState.servoState,
                               onChanged: (value) {
                                 _toggleServo(value);
@@ -263,14 +214,14 @@ class _DashboardPageState extends State<DashboardPage> {
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: ListTile(
-                            leading: Icon(Icons.lightbulb, size: 40, color: Colors.yellow[700]),
+                            leading: Icon(Icons.lightbulb, size: 40, color: Color(0xFF5B4741)),
                             title: Text(
                               'Status Lampu',
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold,  fontFamily: 'Unica One',),
                             ),
                             subtitle: Text(
                               _ldrStatus,
-                              style: TextStyle(fontSize: 18),
+                              style: TextStyle(fontSize: 18,fontFamily: 'Unica One'),
                             ),
                           ),
                         ),
@@ -284,21 +235,27 @@ class _DashboardPageState extends State<DashboardPage> {
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: ListTile(
-                            leading: Icon(Icons.notifications, size: 40, color: Colors.red),
+                            leading: Image.asset(
+                              'assets/images/detector_smoke.png',
+                              width: 40,
+                              height: 40,
+                              color: Color(0xFF5B4741),
+                            ),
                             title: Text(
-                              'Peringatan Alarm',
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                              'Sensor Asap',
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: 'Unica One'),
                             ),
-                            trailing: Switch(
-                              activeColor: Colors.red,
-                              value: switchState.buzzerState,
-                              onChanged: (value) {
-                                _toggleBuzzer(value);
-                              },
+                            subtitle: Text(
+                              _h2Status,
+                              style: TextStyle(fontSize: 18, fontFamily: 'Unica One'),
                             ),
                           ),
                         ),
                       ),
+
+
+
+
                       Card(
                         margin: EdgeInsets.symmetric(vertical: 15),
                         elevation: 8,
@@ -308,14 +265,14 @@ class _DashboardPageState extends State<DashboardPage> {
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: ListTile(
-                            leading: Icon(Icons.network_check, size: 40, color: Colors.blue),
+                            leading: Icon(Icons.network_check, size: 40, color: Color(0xFF5B4741)),
                             title: Text(
                               'Status Koneksi MQTT',
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold,fontFamily: 'Unica One',),
                             ),
                             subtitle: Text(
                               _mqttStatus,
-                              style: TextStyle(fontSize: 18),
+                              style: TextStyle(fontSize: 18,fontFamily: 'Unica One',),
                             ),
                           ),
                         ),
@@ -336,7 +293,7 @@ class _DashboardPageState extends State<DashboardPage> {
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.wb_sunny), // Icon for Weather
+            icon: Icon(Icons.wb_sunny),
             label: 'Weather',
           ),
           BottomNavigationBarItem(
@@ -344,17 +301,26 @@ class _DashboardPageState extends State<DashboardPage> {
             label: 'User',
           ),
         ],
-        currentIndex: 0, // Set current index to 0 for the Dashboard
+        currentIndex: 0,
         selectedItemColor: Colors.black,
         unselectedItemColor: Colors.black54,
+        selectedLabelStyle: TextStyle(
+          fontFamily: 'Unica One',
+
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontFamily: 'Unica One',
+
+        ),
         onTap: _onItemTapped,
+
       ),
     );
   }
 
   @override
   void dispose() {
-    _mqttService.disconnect(); // Disconnect the MQTT service when disposing
+    _mqttService.disconnect();
     super.dispose();
   }
 }

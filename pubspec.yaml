@@ -38,6 +38,13 @@ dev_dependencies:
 
   # Recommended lints for better coding practices
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.10.0 # Added for app icon generation
+
+flutter_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/images/icon_app.png" # Path to your icon image
 
 flutter:
   uses-material-design: true

@@ -1,31 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'mqtt_service.dart'; // Ensure this path is correct according to your folder structure
+import 'mqtt_service.dart';
 
 class SwitchState with ChangeNotifier {
   bool _servoState = false;
-  bool _buzzerState = false;
-  final MqttService mqttService; // Change to public
+  String _lampStatus = 'off'; // State untuk lampu
+  final MqttService mqttService;
 
-  SwitchState(this.mqttService) { // Update constructor
-    mqttService.onConnectionChanged = _updateConnectionStatus; // Set callback
-    _loadSwitchStates(); // Load saved states when initialized
+  SwitchState(this.mqttService) {
+    mqttService.onConnectionChanged = _updateConnectionStatus;
+    mqttService.onMessageReceived = _handleMessage; // Tambahkan listener untuk pesan
+    _loadSwitchStates();
   }
 
   bool get servoState => _servoState;
-  bool get buzzerState => _buzzerState;
+  String get lampStatus => _lampStatus; // Getter untuk status lampu
 
   void toggleServo(bool value) {
     _servoState = value;
-    _saveSwitchState('servo', value); // Save state to shared preferences
-    _publishStatus(); // Publish current status to MQTT
-    notifyListeners();
-  }
-
-  void toggleBuzzer(bool value) {
-    _buzzerState = value;
-    _saveSwitchState('buzzer', value); // Save state to shared preferences
-    _publishStatus(); // Publish current status to MQTT
+    _saveSwitchState('servo', value);
+    _publishStatus();
     notifyListeners();
   }
 
@@ -36,23 +30,28 @@ class SwitchState with ChangeNotifier {
 
   Future<void> _loadSwitchStates() async {
     final prefs = await SharedPreferences.getInstance();
-    _servoState = prefs.getBool('servo') ?? false; // Load saved state or default to false
-    _buzzerState = prefs.getBool('buzzer') ?? false; // Load saved state or default to false
-    notifyListeners(); // Notify listeners to update UI
+    _servoState = prefs.getBool('servo') ?? false;
+    notifyListeners();
   }
 
   void _publishStatus() {
-    // Call publish method from MqttService here
     mqttService.publish('smarthouse/servo', _servoState ? 'on' : 'off');
-    mqttService.publish('smarthouse/buzzer', _buzzerState ? 'on' : 'off');
   }
 
   void _updateConnectionStatus(bool isConnected) {
-    // Handle the connection status update
     if (isConnected) {
       print('MQTT Connected');
     } else {
       print('MQTT Disconnected');
     }
+  }
+
+  void _handleMessage(String topic, String message) {
+    // Menangani pesan yang diterima
+    if (topic == 'smarthouse/lamp') {
+      _lampStatus = message; // Update status lampu
+      notifyListeners(); // Memberitahu listener tentang perubahan
+    }
+    // Tambahkan logika lain jika ada topik lain yang ingin ditangani
   }
 }

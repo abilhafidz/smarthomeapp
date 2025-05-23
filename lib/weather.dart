@@ -14,8 +14,10 @@ class WeatherPage extends StatefulWidget {
 }
 
 class _WeatherPageState extends State<WeatherPage> {
-  String _weatherInfo = "Loading...";
-  String _earthquakeInfo = "Loading...";
+  String _weatherInfo = "Memuat...";
+  String _earthquakeInfo = "Memuat...";
+  String _uvIndexInfo = "Memuat...";
+  String _airQualityInfo = "Memuat...";
   String _errorMessage = "";
 
   @override
@@ -34,10 +36,11 @@ class _WeatherPageState extends State<WeatherPage> {
     if (await Permission.location.isGranted) {
       Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       await _fetchWeatherData(position.latitude, position.longitude);
-      await _fetchEarthquakeData(position.latitude, position.longitude);
+      await _fetchUVIndex(position.latitude, position.longitude);
+      await _fetchAirQuality(position.latitude, position.longitude); // Fetch air quality data
     } else {
       setState(() {
-        _errorMessage = "Permission denied. Cannot fetch weather data.";
+        _errorMessage = "Izin ditolak. Tidak dapat mengambil data cuaca.";
       });
     }
   }
@@ -45,65 +48,105 @@ class _WeatherPageState extends State<WeatherPage> {
   Future<void> _fetchWeatherData(double lat, double lon) async {
     final apiKey = 'e4a0d1b5cb7af67e20d0052c1cf534ec'; // Ganti dengan API key Anda
     final response = await http.get(
-      Uri.parse('https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey&units=metric'),
+      Uri.parse('https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey&units=metric&lang=id'),
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       setState(() {
-        _weatherInfo = "Temperature: ${data['main']['temp']}°C\n"
-            "Weather: ${data['weather'][0]['description']}\n"
-            "Location: ${data['name']}, ${data['sys']['country']}";
+        _weatherInfo = "Temperatur: ${data['main']['temp']}°C\n"
+            "Cuaca: ${data['weather'][0]['description']}\n"
+            "Lokasi: ${data['name']}, ${data['sys']['country']}";
       });
     } else {
       setState(() {
-        _weatherInfo = "Failed to load weather data";
+        _weatherInfo = "Gagal memuat data cuaca";
       });
     }
   }
 
-  Future<void> _fetchEarthquakeData(double lat, double lon) async {
+
+  Future<void> _fetchUVIndex(double lat, double lon) async {
+    final apiKey = 'e4a0d1b5cb7af67e20d0052c1cf534ec'; // Ganti dengan API key Anda
     final response = await http.get(
-      Uri.parse('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson'),
+      Uri.parse('https://api.openweathermap.org/data/2.5/uvi?lat=$lat&lon=$lon&appid=$apiKey'), // Permintaan untuk indeks UV
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      if (data['features'].isNotEmpty) {
-        StringBuffer earthquakeInfoBuffer = StringBuffer();
+      String uvIndex = data['value'].toString();
+      String warningMessage;
 
-        for (var earthquake in data['features']) {
-          double quakeLat = earthquake['geometry']['coordinates'][1];
-          double quakeLon = earthquake['geometry']['coordinates'][0];
-          double distance = Geolocator.distanceBetween(lat, lon, quakeLat, quakeLon) / 1000; // distance in km
-
-          if (distance <= 100) {
-            earthquakeInfoBuffer.writeln("Magnitude: ${earthquake['properties']['mag']}\n"
-                "Location: ${earthquake['properties']['place']}\n"
-                "Distance: ${distance.toStringAsFixed(2)} km\n");
-          }
-        }
-
-        if (earthquakeInfoBuffer.isNotEmpty) {
-          setState(() {
-            _earthquakeInfo = earthquakeInfoBuffer.toString();
-          });
-        } else {
-          setState(() {
-            _earthquakeInfo = "No recent earthquakes nearby.";
-          });
-        }
+      if (double.parse(uvIndex) <= 2) {
+        warningMessage = "Indeks Sinar UV: $uvIndex (Rendah)";
+      } else if (double.parse(uvIndex) <= 5) {
+        warningMessage = "Indeks Sinar UV: $uvIndex (Sedang)";
+      } else if (double.parse(uvIndex) <= 7) {
+        warningMessage = "Indeks Sinar UV: $uvIndex (Tinggi)";
+      } else if (double.parse(uvIndex) <= 10) {
+        warningMessage = "Indeks Sinar UV: $uvIndex (Sangat Tinggi)";
       } else {
-        setState(() {
-          _earthquakeInfo = "No recent earthquakes.";
-        });
+        warningMessage = "Indeks Sinar UV: $uvIndex (Ekstrem)";
       }
+
+      setState(() {
+        _uvIndexInfo = warningMessage + "\nPerhatian: Gunakan pelindung matahari!";
+      });
     } else {
       setState(() {
-        _earthquakeInfo = "Failed to load earthquake data";
+        _uvIndexInfo = "Gagal memuat data indeks sinar UV";
       });
     }
   }
+
+  Future<void> _fetchAirQuality(double lat, double lon) async {
+    final apiKey = 'e4a0d1b5cb7af67e20d0052c1cf534ec';
+    final response = await http.get(
+      Uri.parse('http://api.openweathermap.org/data/2.5/air_pollution?lat=$lat&lon=$lon&appid=$apiKey'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final aqi = data['list'][0]['main']['aqi'];
+      String airQualityLevel;
+      String healthRecommendation;
+
+      switch (aqi) {
+        case 1:
+          airQualityLevel = "Baik";
+          healthRecommendation = "Kualitas udara sangat baik. Tidak ada risiko kesehatan.";
+          break;
+        case 2:
+          airQualityLevel = "Sedang";
+          healthRecommendation = "Kualitas udara dapat diterima. Beberapa polutan mungkin menimbulkan risiko bagi individu yang sensitif.";
+          break;
+        case 3:
+          airQualityLevel = "Tidak Sehat bagi Kelompok Sensitif";
+          healthRecommendation = "Kelompok sensitif mungkin mengalami efek kesehatan.";
+          break;
+        case 4:
+          airQualityLevel = "Tidak Sehat";
+          healthRecommendation = "Semua orang mungkin mulai mengalami efek kesehatan.";
+          break;
+        case 5:
+          airQualityLevel = "Sangat Tidak Sehat";
+          healthRecommendation = "Semua orang mungkin terkena dampak kesehatan yang serius.";
+          break;
+        default:
+          airQualityLevel = "Tidak Diketahui";
+          healthRecommendation = "Tidak ada data kualitas udara tersedia.";
+      }
+
+      setState(() {
+        _airQualityInfo = "Indeks Kualitas Udara : $aqi ($airQualityLevel)\n$healthRecommendation";
+      });
+    } else {
+      setState(() {
+        _airQualityInfo = "Gagal memuat data kualitas udara";
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -137,10 +180,11 @@ class _WeatherPageState extends State<WeatherPage> {
               ),
             ),
             Text(
-              'CUACA & GEMPA',
+              'Weather',
               style: TextStyle(
                 color: Color(0xFF66544D),
                 fontSize: 24,
+                fontFamily: 'Unica One',
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -173,18 +217,20 @@ class _WeatherPageState extends State<WeatherPage> {
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: ListTile(
+                            leading: Icon(Icons.cloud, size: 40, color: Color(0xFF5B4741)),
                             title: Text(
                               'Informasi Cuaca',
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold,fontFamily: 'Unica One'),
                             ),
                             subtitle: Text(
                               _weatherInfo,
-                              style: TextStyle(fontSize: 18),
+                              style: TextStyle(fontSize: 18,fontFamily: 'Unica One'),
                             ),
                           ),
                         ),
                       ),
-                      // Card for Earthquake Prediction
+
+                      // Card for UV Index
                       Card(
                         margin: EdgeInsets.symmetric(vertical: 15),
                         elevation: 8,
@@ -194,13 +240,36 @@ class _WeatherPageState extends State<WeatherPage> {
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: ListTile(
+                            leading: Icon(Icons.brightness_7, size: 40, color: Color(0xFF5B4741)),
                             title: Text(
-                              'Prediksi Gempa',
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                              'Indeks Sinar UV',
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold,fontFamily: 'Unica One'),
                             ),
                             subtitle: Text(
-                              _earthquakeInfo,
-                              style: TextStyle(fontSize: 18),
+                              _uvIndexInfo,
+                              style: TextStyle(fontSize: 18,fontFamily: 'Unica One'),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Card for Air Quality
+                      Card(
+                        margin: EdgeInsets.symmetric(vertical: 15),
+                        elevation: 8,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: ListTile(
+                            leading: Icon(Icons.air, size: 40, color: Color(0xFF5B4741)),
+                            title: Text(
+                              'Kualitas Udara',
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold,fontFamily: 'Unica One'),
+                            ),
+                            subtitle: Text(
+                              _airQualityInfo,
+                              style: TextStyle(fontSize: 18,fontFamily: 'Unica One',),
                             ),
                           ),
                         ),
@@ -232,6 +301,14 @@ class _WeatherPageState extends State<WeatherPage> {
         currentIndex: 1,
         selectedItemColor: Colors.black,
         unselectedItemColor: Colors.black54,
+        selectedLabelStyle: TextStyle(
+          fontFamily: 'Unica One', // Font yang ingin digunakan untuk label terpilih
+
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontFamily: 'Unica One', // Font yang ingin digunakan untuk label tidak terpilih
+
+        ),
         onTap: (index) {
           if (index == 0) {
             Navigator.pushReplacement(

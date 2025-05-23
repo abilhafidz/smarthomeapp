@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dashboard.dart';
-import 'weather.dart'; // Pastikan ini adalah file cuaca yang kamu buat
-import 'switch_state.dart';
+import 'weather.dart';
+import 'about_us.dart';
+import 'update_akun.dart';
 import 'package:provider/provider.dart';
 
 class UserPage extends StatefulWidget {
@@ -12,9 +12,8 @@ class UserPage extends StatefulWidget {
 }
 
 class _UserPageState extends State<UserPage> {
-  int _selectedIndex = 2; // Set to 2 because this is the UserPage
-  User? currentUser; // Firebase User object
-  String? username; // To store the username from Firestore
+  int _selectedIndex = 2;
+  User? currentUser;
 
   @override
   void initState() {
@@ -22,29 +21,13 @@ class _UserPageState extends State<UserPage> {
     _getCurrentUser();
   }
 
-  // Get current logged-in user's email and username (if available)
+
   void _getCurrentUser() async {
     currentUser = FirebaseAuth.instance.currentUser;
 
-    if (currentUser != null) {
-      // Fetch the username from Firestore using the current user's UID
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser!.uid)
-          .get();
-
-      if (userDoc.exists) {
-        setState(() {
-          username = userDoc.get('username'); // Get the username from Firestore
-        });
-      } else {
-        setState(() {
-          username = 'User not found'; // Handle the case where the user is not found
-        });
-      }
-    } else {
+    if (currentUser == null) {
       setState(() {
-        username = 'Not logged in'; // Provide a message if user is not logged in
+        currentUser = null;
       });
     }
   }
@@ -55,7 +38,7 @@ class _UserPageState extends State<UserPage> {
         _selectedIndex = index;
       });
 
-      // Navigate to the corresponding page
+
       if (index == 0) {
         Navigator.pushReplacement(
           context,
@@ -75,11 +58,11 @@ class _UserPageState extends State<UserPage> {
           ),
         );
       } else if (index == 1) {
-        // Navigate to WeatherPage
+
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => WeatherPage(), // Halaman cuaca
+            pageBuilder: (context, animation, secondaryAnimation) => WeatherPage(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               var begin = 0.0;
               var end = 1.0;
@@ -97,15 +80,38 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
-  // Function to handle logout
+
   Future<void> _handleLogout() async {
-    try {
-      await FirebaseAuth.instance.signOut(); // Firebase logout
-      Navigator.pushReplacementNamed(context, '/login');
-    } catch (e) {
-      print("Error signing out: $e");
-    }
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Logout'),
+        content: const Text('Apakah Anda yakin ingin logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Tidak'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              try {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushReplacementNamed(context, '/login');
+              } catch (e) {
+                print("Error signing out: $e");
+              }
+            },
+            child: const Text('Ya'),
+          ),
+        ],
+      ),
+    );
   }
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -117,9 +123,10 @@ class _UserPageState extends State<UserPage> {
         elevation: 0,
         centerTitle: true,
         title: const Text(
-          'USER PROFILE',
+          'User Profile',
           style: TextStyle(
             color: Color(0xFF66544D),
+            fontFamily: 'Unica One',
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
@@ -131,11 +138,9 @@ class _UserPageState extends State<UserPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              // User information card
+
               _buildUserCard(),
-              const SizedBox(height: 20),
-              // Log out button
-              _buildLogoutButton(),
+
             ],
           ),
         ),
@@ -144,7 +149,6 @@ class _UserPageState extends State<UserPage> {
     );
   }
 
-  // Function to build user information card
   Widget _buildUserCard() {
     return Card(
       color: const Color(0xFFFAEBD7),
@@ -153,6 +157,7 @@ class _UserPageState extends State<UserPage> {
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
               Icons.person_pin,
@@ -160,18 +165,16 @@ class _UserPageState extends State<UserPage> {
               color: Colors.black,
             ),
             const SizedBox(height: 20),
-            _buildBeautifiedText('Email: ${currentUser?.email ?? 'Not available'}'),
-            const SizedBox(height: 10),
-            _buildBeautifiedText('Username: ${username ?? 'Not available'}'),
+            _buildBeautifiedFrame(),
           ],
         ),
       ),
     );
   }
 
-  // Function to create beautifully framed text widgets for email and username
-  Widget _buildBeautifiedText(String text) {
+  Widget _buildBeautifiedFrame() {
     return Container(
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFFE3DAC9), Color(0xFFF5DEB3)],
@@ -188,38 +191,70 @@ class _UserPageState extends State<UserPage> {
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-      child: Text(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildOptionRow(Icons.email, 'Email: ${currentUser?.email ?? 'Not available'}'),
+          const Divider(color: Color(0xFF66544D)),
+          _buildOptionButton(Icons.info, 'Tentang kami', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AboutUsPage()),
+            );
+          }),
+          _buildOptionButton(Icons.edit, 'Edit akun', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => UpdateAkunPage()),
+            );
+          }),
+          const Divider(color: Color(0xFF66544D)),
+          _buildOptionButton(Icons.logout, 'Log Out', _handleLogout),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOptionRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.black87, size: 24),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontSize: 18,
+              fontFamily: 'Unica One',
+              fontWeight: FontWeight.w600,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOptionButton(IconData icon, String text, VoidCallback onPressed) {
+    return TextButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, color: Colors.black87),
+      label: Text(
         text,
         style: const TextStyle(
           color: Colors.black87,
-          fontSize: 22,
+          fontSize: 18,
+          fontFamily: 'Unica One',
           fontWeight: FontWeight.w600,
         ),
       ),
+      style: TextButton.styleFrom(alignment: Alignment.centerLeft),
     );
   }
 
-  // Function to build the logout button
-  Widget _buildLogoutButton() {
-    return ElevatedButton(
-      onPressed: _handleLogout,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFFFAEBD7),
-        foregroundColor: Colors.black,
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-      ),
-      child: const Text(
-        'Log Out',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
 
-  // Function to build the bottom navigation bar
   Widget _buildBottomNavigationBar() {
     return BottomNavigationBar(
       backgroundColor: const Color(0xFFFAEBD7),
@@ -240,6 +275,14 @@ class _UserPageState extends State<UserPage> {
       currentIndex: _selectedIndex,
       selectedItemColor: Colors.black,
       unselectedItemColor: Colors.black54,
+      selectedLabelStyle: TextStyle(
+        fontFamily: 'Unica One',
+
+      ),
+      unselectedLabelStyle: TextStyle(
+        fontFamily: 'Unica One',
+
+      ),
       onTap: _onItemTapped,
     );
   }

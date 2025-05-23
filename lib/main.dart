@@ -1,27 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'login_page.dart'; // Halaman login
-import 'dashboard.dart'; // Halaman dashboard
-import 'switch_state.dart'; // Kelas untuk state switch
-import 'mqtt_service.dart'; // Kelas MqttService
-import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth untuk autentikasi
-import 'package:firebase_core/firebase_core.dart'; // Firebase Core
-import 'firebase_options.dart'; // File firebase_options.dart yang dihasilkan
-import 'splash_screen.dart'; // Import SplashScreen
-
+import 'login_page.dart';
+import 'dashboard.dart';
+import 'switch_state.dart';
+import 'mqtt_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'splash_screen.dart';
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Menjamin inisialisasi yang tepat
+  WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi Firebase dengan konfigurasi platform
   try {
     await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform, // Menggunakan opsi Firebase sesuai platform
+      options: DefaultFirebaseOptions.currentPlatform,
     );
   } catch (e) {
-    print("Failed to initialize Firebase: $e"); // Pengecekan error jika Firebase gagal diinisialisasi
+    print("Failed to initialize Firebase: $e");
   }
 
-  // Menjalankan aplikasi dengan ChangeNotifierProvider untuk SwitchState dan MqttService
   runApp(
     ChangeNotifierProvider(
       create: (context) => SwitchState(MqttService()),
@@ -29,18 +26,15 @@ void main() async {
     ),
   );
 }
-
 class SmartHomeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: SplashScreen(), // Tampilkan SplashScreen terlebih dahulu
-      debugShowCheckedModeBanner: false, // Menghilangkan banner debug
+      home: SplashScreen(),
+      debugShowCheckedModeBanner: false,
       routes: {
         '/login': (context) => LoginPage(),
-
       },
     );
   }
 }
-

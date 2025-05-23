@@ -97,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
               child: SlideTransition(
                 position: _textAnimation,
                 child: Text(
-                  'S M A R T H O M E',
+                  'S M A R T H O U S E',
                   style: TextStyle(
                     color: Colors.white, // Warna teks putih
                     fontFamily: 'Unica One', // Menggunakan font Unica One
